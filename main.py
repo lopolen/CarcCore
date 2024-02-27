@@ -50,8 +50,12 @@ class MainWindow(QMainWindow):
         self.ui.btn_subtract.clicked.connect(lambda: self.math_action('-'))
         self.ui.btn_multiply.clicked.connect(lambda: self.math_action('*'))
         self.ui.btn_divise.clicked.connect(lambda: self.math_action('/'))
+        self.ui.btn_factorial.clicked.connect(lambda: self.math_action('!'))
         
         self.ui.btn_result.clicked.connect(lambda: self.math_action('='))
+
+        # Convert button
+        self.ui.btn_convert_unit.clicked.connect(self.handle_convert_unit) 
 
         # Entry unit combobox update
         self.ui.cb_entry_unit.currentTextChanged.connect(self.on_cb_entry_update)
@@ -68,13 +72,11 @@ class MainWindow(QMainWindow):
         else:
             self.ui.el_entry.setText(self.ui.el_entry.text() + text)
 
-
     def add_point(self):
         """Adding point to the entry editline
         """
         if not '.' in self.ui.el_entry.text():
             self.ui.el_entry.setText(self.ui.el_entry.text() + '.')
-
     
     def clear_entry(self):
         """Clearing entry editline or temp label
@@ -120,7 +122,7 @@ class MainWindow(QMainWindow):
             return n1 / n2
 
     def math_action(self, math_sign: str):
-        """Adding a math sign to the entry editline
+        """Should be replaced. Bad idea !!!!!!!!!!!!!!!!!!
 
         Args:
             math_sign (str): Math sign symbol
@@ -129,6 +131,13 @@ class MainWindow(QMainWindow):
             # Saving first number and action
             self.n1 = float(self.ui.el_entry.text())
             self.math_action_symbol = math_sign
+
+            if math_sign in ('!', '**2', '**3', 'sqrt', '3rt', '1/', 'sin', 'cos', 'tg', 'ctg',
+                             'arcsin', 'arccos', 'arctg', 'arcctg'):
+                self.ui.lbl_temp.setText(self.remove_floating_zeros(self.ui.el_entry.text()) + f' {math_sign} = ')
+                self.ui.el_entry.setText(self.calculate(self.n1, None, math_sign))
+
+                return
 
             # Updating UI
             self.ui.lbl_temp.setText(self.remove_floating_zeros(self.ui.el_entry.text()) + f' {math_sign} ')
@@ -170,6 +179,23 @@ class MainWindow(QMainWindow):
                 self.ui.cb_wanted_unit.addItems(units.amperage_c_units.keys())
             elif cb_text in ('celsius', 'fahrenheit', 'kelvin'):
                 self.ui.cb_wanted_unit.addItems(('celsius', 'fahrenheit', 'kelvin'))
+
+    def handle_convert_unit(self):
+        if self.ui.cb_entry_unit.currentText() == self.SEP:
+            return 
+        
+        num = float(self.ui.el_entry.text())
+        entry_unit = self.ui.cb_entry_unit.currentText()
+        wanted_unit = self.ui.cb_wanted_unit.currentText()
+
+        res = CalcCore.convert(num, entry_unit, wanted_unit)
+        
+        self.ui.el_entry.setText(self.remove_floating_zeros(str(res[0])))
+        
+        self.ui.cb_entry_unit.setCurrentText(wanted_unit)
+        self.ui.cb_wanted_unit.setCurrentText(entry_unit)
+
+        self.ui.lbl_temp.setText(f'Convert {self.remove_floating_zeros(str(num))} {entry_unit} to {wanted_unit} = ')
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ def convert(value: float, unit: str, convert_to: str) -> tuple[float, str]:
     if (unit in units.length_c_units.keys()) and (convert_to in units.length_c_units.keys()):
         multiplier = units.length_c_units[unit] / units.length_c_units[convert_to]
 
-    elif (unit in units.weight_c_units.keys()) and (convert_to in units.weight_c_units[convert_to]):
+    elif (unit in units.weight_c_units.keys()) and (convert_to in units.weight_c_units.keys()):
         multiplier = units.weight_c_units[unit] / units.weight_c_units[convert_to]
 
     elif (unit in units.time_c_units.keys()) and (convert_to in units.time_c_units.keys()):

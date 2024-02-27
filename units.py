@@ -55,3 +55,26 @@ amperage_c_units = {
     'picoampere': 10**-12,
     'femtoampere': 10**-15
 }
+
+def get_all_units(sep: str = None) -> list:
+    all_units = []
+    
+    all_units.extend(i for i in length_c_units.keys())
+    if not sep is None:
+        all_units.append(sep)
+
+    all_units.extend(i for i in weight_c_units.keys())
+    if not sep is None:
+        all_units.append(sep)
+
+    all_units.extend(i for i in time_c_units.keys())
+    if not sep is None:
+        all_units.append(sep)
+
+    all_units.extend(i for i in amperage_c_units.keys())
+    if not sep is None:
+        all_units.append(sep)
+
+    all_units.extend(('celsius', 'fahrenheit', 'kelvin'))
+
+    return all_units

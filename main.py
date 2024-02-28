@@ -1,4 +1,5 @@
 import sys
+import math
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
 
 from MainWindowDesign import Ui_MainWindow
@@ -14,12 +15,15 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
 
         # Reserving variables
-        self.n1 = 0
-        self.n2 = 0
-        self.math_action_symbol = ''
+        self.n1 = None
+        self.n2 = None
+        self.math_operator = None
+
+        # Constants
+        self.SEP = ''
+        self.ONLY_n1_OPERATOS = ['n!', '√x', '3√x', '^3', '^2', '1 / x']
 
         # Filling comboboxes
-        self.SEP = ''
         self.ui.cb_entry_unit.addItems(units.get_all_units(sep=self.SEP))
         self.on_cb_entry_update()
 
@@ -45,21 +49,96 @@ class MainWindow(QMainWindow):
         # Backspace button
         self.ui.btn_backspace.clicked.connect(self.backspace_handle)
 
+        # Change module button
+        self.ui.btn_change_mod.clicked.connect(self.handle_change_mod)
+
         # Calculation button
-        self.ui.btn_plus.clicked.connect(lambda: self.math_action('+'))
-        self.ui.btn_subtract.clicked.connect(lambda: self.math_action('-'))
-        self.ui.btn_multiply.clicked.connect(lambda: self.math_action('*'))
-        self.ui.btn_divise.clicked.connect(lambda: self.math_action('/'))
-        self.ui.btn_factorial.clicked.connect(lambda: self.math_action('!'))
-        
-        self.ui.btn_result.clicked.connect(lambda: self.math_action('='))
+        self.ui.btn_plus.clicked.connect(lambda: self.handle_calculation_buttons('+'))
+        self.ui.btn_subtract.clicked.connect(lambda: self.handle_calculation_buttons('-'))
+        self.ui.btn_multiply.clicked.connect(lambda: self.handle_calculation_buttons('*'))
+        self.ui.btn_divise.clicked.connect(lambda: self.handle_calculation_buttons('/'))
+        self.ui.btn_factorial.clicked.connect(lambda: self.handle_calculation_buttons('n!'))
+        self.ui.btn_convert.clicked.connect(lambda: self.handle_calculation_buttons('*10^y'))
+        self.ui.btn_power_2.clicked.connect(lambda: self.handle_calculation_buttons('^2'))
+        self.ui.btn_power_3.clicked.connect(lambda: self.handle_calculation_buttons('^3'))
+        self.ui.btn_power_y.clicked.connect(lambda: self.handle_calculation_buttons('^y'))
+        self.ui.btn_inverse.clicked.connect(lambda: self.handle_calculation_buttons('1 / x'))
+        self.ui.btn_square_root.clicked.connect(lambda: self.handle_calculation_buttons('√x'))
+        self.ui.btn_cube_root.clicked.connect(lambda: self.handle_calculation_buttons('3√x'))
+        self.ui.btn_algebry_root.clicked.connect(lambda: self.handle_calculation_buttons('y√x'))
 
         # Convert button
-        self.ui.btn_convert_unit.clicked.connect(self.handle_convert_unit) 
+        # self.ui.btn_convert_unit.clicked.connect(self.handle_convert_unit) 
 
         # Entry unit combobox update
         self.ui.cb_entry_unit.currentTextChanged.connect(self.on_cb_entry_update)
 
+    def handle_equal_button(self):
+        result = 0
+        
+        # Two variables operations
+        if self.math_operator == '+':
+            result = self.n1 + self.n2
+        elif self.math_operator == '-':
+            result = self.n1 - self.n2
+        elif self.math_operator == '*':
+            result = self.n1 * self.n2
+        elif self.math_operator == '/':
+            result = self.n1 / self.n2
+        elif self.math_operator == '*10^y':
+            result = self.n1 * 10 ** self.n2
+        elif self.math_operator == 'y√x':
+            if self.n2 % 2 == 0 and self.n1 < 0:
+                raise ValueError
+            result = self.n1 ** (1 / self.n2)
+        elif self.math_operator == '^y':
+            result = self.n1 ** self.n2
+        
+        else:
+            # One variable operation 
+            if self.math_operator == 'n!':
+                result = math.factorial(int(self.n1))
+            elif self.math_operator == '^2':
+                result = self.n1 ** 2
+            elif self.math_operator == '^3':
+                result = self.n1 ** 3
+            elif self.math_operator == '3√x':
+                result = self.n1 ** (1 / 3)
+            elif self.math_operator == '√x':
+                result = math.sqrt(self.n1)
+            elif self.math_operator == '1 / x':
+                result = 1 / self.n1
+            
+            self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} = ')
+            self.ui.el_entry.setText(str(result))
+
+            return
+
+        self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} {self.n2} = ')
+        self.ui.el_entry.setText(str(result))
+
+    def handle_calculation_buttons(self, math_operator):
+        if self.ui.el_entry.text() == '':
+            self.math_operator = math_operator
+            self.ui.lbl_temp.setText(f'{self.n1} {math_operator} ')
+
+            return
+
+        if not self.n1 is None:
+            self.n2 = float(self.ui.el_entry.text())
+            self.handle_equal_button()
+            self.n1 = float(self.ui.el_entry.text())
+        else:
+            self.n1 = float(self.ui.el_entry.text())
+
+        self.math_operator = math_operator
+
+        self.ui.el_entry.clear()
+        
+        if math_operator in self.ONLY_n1_OPERATOS:
+            self.handle_equal_button()
+        else:
+            self.ui.lbl_temp.setText(f'{self.n1} {math_operator} ')
 
     def add_digit(self, text: str): 
         """Adds digits to the entry editline
@@ -78,6 +157,19 @@ class MainWindow(QMainWindow):
         if not '.' in self.ui.el_entry.text():
             self.ui.el_entry.setText(self.ui.el_entry.text() + '.')
     
+    def handle_change_mod(self): 
+        try:
+            if self.ui.el_entry.text()[0] == '-':
+                try:
+                    self.ui.el_entry.setText(self.ui.el_entry.text()[1:])
+                except IndexError:
+                    self.ui.el_entry.setText('')
+                finally:
+                    return
+        except IndexError:
+            pass
+        self.ui.el_entry.setText(f'-{self.ui.el_entry.text()}')
+
     def clear_entry(self):
         """Clearing entry editline or temp label
         """
@@ -87,80 +179,15 @@ class MainWindow(QMainWindow):
             self.ui.lbl_temp.clear()
             
             # Clearing variables 
-            self.n1 = 0
-            self.n2 = 0
-            self.math_action_symbol = ''
+            self.n1 = None
+            self.n2 = None
+            self.math_operator = ''
 
     def backspace_handle(self):
         if len(self.ui.el_entry.text()) > 1:
             self.ui.el_entry.setText(self.ui.el_entry.text()[:-1])
         else:
             self.ui.el_entry.setText('0')
-
-    @staticmethod
-    def remove_floating_zeros(num: str) -> str:
-        """Removing useles floating zeros from number
-
-        Args:
-            num (str): Number
-
-        Returns:
-            str: Number
-        """
-        n = str(float(num))
-        return n[:-2] if n[-2:] == '.0' else n
-
-    @staticmethod
-    def calculate(n1: float, n2: float, math_sign: str) -> float:
-        if math_sign == '+':
-            return n1 + n2 
-        elif math_sign == '-':
-            return n1 - n2
-        elif math_sign == '*':
-            return n1 * n2
-        elif math_sign == '/':
-            return n1 / n2
-
-    def math_action(self, math_sign: str):
-        """Should be replaced. Bad idea !!!!!!!!!!!!!!!!!!
-
-        Args:
-            math_sign (str): Math sign symbol
-        """
-        if not self.ui.lbl_temp.text():
-            # Saving first number and action
-            self.n1 = float(self.ui.el_entry.text())
-            self.math_action_symbol = math_sign
-
-            if math_sign in ('!', '**2', '**3', 'sqrt', '3rt', '1/', 'sin', 'cos', 'tg', 'ctg',
-                             'arcsin', 'arccos', 'arctg', 'arcctg'):
-                self.ui.lbl_temp.setText(self.remove_floating_zeros(self.ui.el_entry.text()) + f' {math_sign} = ')
-                self.ui.el_entry.setText(self.calculate(self.n1, None, math_sign))
-
-                return
-
-            # Updating UI
-            self.ui.lbl_temp.setText(self.remove_floating_zeros(self.ui.el_entry.text()) + f' {math_sign} ')
-            if math_sign != '=':
-                self.ui.el_entry.setText('0')
-            else:
-                self.ui.el_entry.setText(self.remove_floating_zeros(str(self.n1)))
-
-        else:
-            if '=' in self.ui.lbl_temp.text():
-                self.ui.lbl_temp.clear()
-                return self.math_action(math_sign)
-
-            # Calculating previous task
-            self.n2 = float(self.ui.el_entry.text())
-            self.n1 = self.calculate(self.n1, self.n2, self.math_action_symbol)
-
-            if math_sign == '=':
-                self.ui.lbl_temp.setText(self.ui.lbl_temp.text() + f'{self.remove_floating_zeros(str(self.n2))} = ')
-                self.ui.el_entry.setText(self.remove_floating_zeros(str(self.n1)))
-            else:
-                self.ui.lbl_temp.setText(self.remove_floating_zeros(str(self.n1)) + f' {math_sign} ')
-                self.ui.el_entry.setText('0')
 
     def on_cb_entry_update(self):
         """Synth the wanted unit combobox values with entry ones

@@ -67,14 +67,21 @@ class MainWindow(QMainWindow):
         self.ui.btn_cube_root.clicked.connect(lambda: self.handle_calculation_buttons('3√x'))
         self.ui.btn_algebry_root.clicked.connect(lambda: self.handle_calculation_buttons('y√x'))
 
+        self.ui.btn_result.clicked.connect(self.handle_equal_button)
+
         # Convert button
-        # self.ui.btn_convert_unit.clicked.connect(self.handle_convert_unit) 
+        self.ui.btn_convert_unit.clicked.connect(self.handle_convert_unit) 
 
         # Entry unit combobox update
         self.ui.cb_entry_unit.currentTextChanged.connect(self.on_cb_entry_update)
 
     def handle_equal_button(self):
-        result = 0
+        if self.n1 is None:
+            self.n1 = float(self.ui.el_entry.text())
+        elif self.n2 is None:
+            self.n2 = float(self.ui.el_entry.text())
+
+        result = None
         
         # Two variables operations
         if self.math_operator == '+':
@@ -93,52 +100,72 @@ class MainWindow(QMainWindow):
             result = self.n1 ** (1 / self.n2)
         elif self.math_operator == '^y':
             result = self.n1 ** self.n2
-        
-        else:
+
             # One variable operation 
-            if self.math_operator == 'n!':
-                result = math.factorial(int(self.n1))
-            elif self.math_operator == '^2':
-                result = self.n1 ** 2
-            elif self.math_operator == '^3':
-                result = self.n1 ** 3
-            elif self.math_operator == '3√x':
-                result = self.n1 ** (1 / 3)
-            elif self.math_operator == '√x':
-                result = math.sqrt(self.n1)
-            elif self.math_operator == '1 / x':
-                result = 1 / self.n1
-            
+        elif self.math_operator == 'n!':
+            result = math.factorial(int(self.n1))
+        elif self.math_operator == '^2':
+            result = self.n1 ** 2
+        elif self.math_operator == '^3':
+            result = self.n1 ** 3
+        elif self.math_operator == '3√x':
+            result = self.n1 ** (1 / 3)
+        elif self.math_operator == '√x':
+            result = math.sqrt(self.n1)
+        elif self.math_operator == '1 / x':
+            result = 1 / self.n1
+        
+        # Equal double click
+        elif self.math_operator == None:
+            self.ui.lbl_temp.setText(f'{self.ui.el_entry.text()} = ')
+            self.ui.el_entry.setText(str(self.ui.el_entry.text()))
+            return
+        
+        if self.math_operator in self.ONLY_n1_OPERATOS:
             self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} = ')
             self.ui.el_entry.setText(str(result))
 
-            return
+        else:
+            self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} {self.n2} = ')
+            self.ui.el_entry.setText(str(result))
 
-        self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} {self.n2} = ')
-        self.ui.el_entry.setText(str(result))
+        self.math_operator = None
 
     def handle_calculation_buttons(self, math_operator):
-        if self.ui.el_entry.text() == '':
+        if self.n1 is None:
+            # Saving
+            self.n1 = float(self.ui.el_entry.text())
             self.math_operator = math_operator
-            self.ui.lbl_temp.setText(f'{self.n1} {math_operator} ')
 
-            return
+            # Calling equal if needed only one parameter 
+            if math_operator in self.ONLY_n1_OPERATOS:
+               self.handle_equal_button()
+               self.n1 = float(self.ui.el_entry.text())
+               self.math_operator = None
+               return
 
-        if not self.n1 is None:
+            # Updating UI
+            self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} ')
+            self.ui.el_entry.clear()
+
+        else:
+            if self.ui.el_entry.text() == '':
+                self.math_operator = math_operator
+                self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} ')
+                return
+            
+            # Saving
             self.n2 = float(self.ui.el_entry.text())
+
+            # Calling equal and saving as n1
             self.handle_equal_button()
             self.n1 = float(self.ui.el_entry.text())
-        else:
-            self.n1 = float(self.ui.el_entry.text())
+            self.n2 = None
+            self.math_operator = math_operator
 
-        self.math_operator = math_operator
-
-        self.ui.el_entry.clear()
-        
-        if math_operator in self.ONLY_n1_OPERATOS:
-            self.handle_equal_button()
-        else:
-            self.ui.lbl_temp.setText(f'{self.n1} {math_operator} ')
+            # Updating UI
+            self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} ')
+            self.ui.el_entry.clear()
 
     def add_digit(self, text: str): 
         """Adds digits to the entry editline
@@ -217,12 +244,12 @@ class MainWindow(QMainWindow):
 
         res = CalcCore.convert(num, entry_unit, wanted_unit)
         
-        self.ui.el_entry.setText(self.remove_floating_zeros(str(res[0])))
+        self.ui.el_entry.setText(str(res[0]))
         
         self.ui.cb_entry_unit.setCurrentText(wanted_unit)
         self.ui.cb_wanted_unit.setCurrentText(entry_unit)
 
-        self.ui.lbl_temp.setText(f'Convert {self.remove_floating_zeros(str(num))} {entry_unit} to {wanted_unit} = ')
+        self.ui.lbl_temp.setText(f'Convert {num} {entry_unit} to {wanted_unit} = ')
 
 
 if __name__ == '__main__':

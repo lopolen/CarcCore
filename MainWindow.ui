@@ -40,6 +40,38 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
+       <widget class="QRadioButton" name="rb_degrees">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Degrees</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rb_radians">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Radians</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QComboBox" name="cb_entry_unit">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -231,7 +263,7 @@
        </widget>
       </item>
       <item row="5" column="5">
-       <widget class="QPushButton" name="btn_arcctg_2">
+       <widget class="QPushButton" name="btn_arcctg">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -395,7 +427,7 @@
        </widget>
       </item>
       <item row="5" column="4">
-       <widget class="QPushButton" name="btn_arcctg">
+       <widget class="QPushButton" name="btn_arctg">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
           <horstretch>0</horstretch>

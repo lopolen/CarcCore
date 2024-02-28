@@ -1,6 +1,6 @@
 import sys
 import math
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QMessageBox
 
 from MainWindowDesign import Ui_MainWindow
 import CalcCore
@@ -21,7 +21,8 @@ class MainWindow(QMainWindow):
 
         # Constants
         self.SEP = ''
-        self.ONLY_n1_OPERATOS = ['n!', '√x', '3√x', '^3', '^2', '1 / x']
+        self.ONLY_n1_OPERATOS = ['n!', '√x', '3√x', '^3', '^2', '1 / x', 'sin', 
+                                 'cos', 'tg', 'ctg', 'arcsin', 'arccos', 'arctg', 'arcctg']
 
         # Filling comboboxes
         self.ui.cb_entry_unit.addItems(units.get_all_units(sep=self.SEP))
@@ -66,6 +67,15 @@ class MainWindow(QMainWindow):
         self.ui.btn_square_root.clicked.connect(lambda: self.handle_calculation_buttons('√x'))
         self.ui.btn_cube_root.clicked.connect(lambda: self.handle_calculation_buttons('3√x'))
         self.ui.btn_algebry_root.clicked.connect(lambda: self.handle_calculation_buttons('y√x'))
+        
+        self.ui.btn_sin.clicked.connect(lambda: self.handle_calculation_buttons('sin'))
+        self.ui.btn_cos.clicked.connect(lambda: self.handle_calculation_buttons('cos'))
+        self.ui.btn_tg.clicked.connect(lambda: self.handle_calculation_buttons('tg'))
+        self.ui.btn_ctg.clicked.connect(lambda: self.handle_calculation_buttons('ctg'))
+        self.ui.btn_arcsin.clicked.connect(lambda: self.handle_calculation_buttons('arcsin'))
+        self.ui.btn_arccos.clicked.connect(lambda: self.handle_calculation_buttons('arccos'))
+        self.ui.btn_arctg.clicked.connect(lambda: self.handle_calculation_buttons('arctg'))
+        self.ui.btn_arcctg.clicked.connect(lambda: self.handle_calculation_buttons('arcctg'))
 
         self.ui.btn_result.clicked.connect(self.handle_equal_button)
 
@@ -76,60 +86,105 @@ class MainWindow(QMainWindow):
         self.ui.cb_entry_unit.currentTextChanged.connect(self.on_cb_entry_update)
 
     def handle_equal_button(self):
-        if self.n1 is None:
-            self.n1 = float(self.ui.el_entry.text())
-        elif self.n2 is None:
-            self.n2 = float(self.ui.el_entry.text())
+        try:
+            if self.n1 is None:
+                self.n1 = float(self.ui.el_entry.text())
+            elif self.n2 is None:
+                self.n2 = float(self.ui.el_entry.text())
 
-        result = None
+            result = None
+            
+            # Two variables operations
+            if self.math_operator == '+':
+                result = self.n1 + self.n2
+            elif self.math_operator == '-':
+                result = self.n1 - self.n2
+            elif self.math_operator == '*':
+                result = self.n1 * self.n2
+            elif self.math_operator == '/':
+                result = self.n1 / self.n2
+            elif self.math_operator == '*10^y':
+                result = self.n1 * 10 ** self.n2
+            elif self.math_operator == 'y√x':
+                if self.n2 % 2 == 0 and self.n1 < 0:
+                    raise ValueError
+                result = self.n1 ** (1 / self.n2)
+            elif self.math_operator == '^y':
+                result = self.n1 ** self.n2
+
+                # One variable operation 
+            elif self.math_operator == 'n!':
+                result = math.factorial(int(self.n1))
+            elif self.math_operator == '^2':
+                result = self.n1 ** 2
+            elif self.math_operator == '^3':
+                result = self.n1 ** 3
+            elif self.math_operator == '3√x':
+                result = self.n1 ** (1 / 3)
+            elif self.math_operator == '√x':
+                result = math.sqrt(self.n1)
+            elif self.math_operator == '1 / x':
+                result = 1 / self.n1
+            
+            # Trigonometria 
+            elif self.math_operator == 'sin':
+                if self.ui.rb_degrees.isChecked():
+                    result = math.degrees(math.sin(math.radians(self.n1)))
+                else:
+                    result = math.sin(self.n1)
+            elif self.math_operator == 'cos':
+                if self.ui.rb_degrees.isChecked():
+                    result = math.degrees(math.cos(math.radians(self.n1)))
+                result = math.cos(self.n1)
+            elif self.math_operator == 'tg':
+                if self.ui.rb_degrees.isChecked():
+                    result = math.degrees(math.tan(math.radians(self.n1)))
+                result = math.tan(self.n1)
+            elif self.math_operator == 'ctg':
+                if self.ui.rb_degrees.isChecked():
+                    result = math.degrees(1 / math.tan(math.radians(self.n1)))
+                result = 1 / math.tan(self.n1)
+            elif self.math_operator == 'arcsin':
+                if self.ui.rb_degrees.isChecked():
+                    result = math.degrees(math.asin(math.radians(self.n1)))
+                result = math.asin(self.n1)
+            elif self.math_operator == 'arccos':
+                if self.ui.rb_degrees.isChecked():
+                    result = math.degrees(math.acos(math.radians(self.n1)))
+                result = math.acos(self.n1)
+            elif self.math_operator == 'arctg':
+                if self.ui.rb_degrees.isChecked():
+                    result = math.degrees(math.atan(math.radians(self.n1)))
+                result = math.atan(self.n1)
+            elif self.math_operator == 'arcctg':
+                if self.ui.rb_degrees.isChecked():
+                    result = math.degrees(math.pi / 2 - math.atan(math.radians(self.n1)))
+                result = math.pi / 2 - math.atan(self.n1)
+            
+            # Equal double click
+            elif self.math_operator == None:
+                self.ui.lbl_temp.setText(f'{self.ui.el_entry.text()} = ')
+                self.ui.el_entry.setText(str(self.ui.el_entry.text()))
+                return
+            
+            if self.math_operator in self.ONLY_n1_OPERATOS:
+                self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} = ')
+                self.ui.el_entry.setText(str(result))
+
+            else:
+                self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} {self.n2} = ')
+                self.ui.el_entry.setText(str(result))
+
+            self.math_operator = None
         
-        # Two variables operations
-        if self.math_operator == '+':
-            result = self.n1 + self.n2
-        elif self.math_operator == '-':
-            result = self.n1 - self.n2
-        elif self.math_operator == '*':
-            result = self.n1 * self.n2
-        elif self.math_operator == '/':
-            result = self.n1 / self.n2
-        elif self.math_operator == '*10^y':
-            result = self.n1 * 10 ** self.n2
-        elif self.math_operator == 'y√x':
-            if self.n2 % 2 == 0 and self.n1 < 0:
-                raise ValueError
-            result = self.n1 ** (1 / self.n2)
-        elif self.math_operator == '^y':
-            result = self.n1 ** self.n2
-
-            # One variable operation 
-        elif self.math_operator == 'n!':
-            result = math.factorial(int(self.n1))
-        elif self.math_operator == '^2':
-            result = self.n1 ** 2
-        elif self.math_operator == '^3':
-            result = self.n1 ** 3
-        elif self.math_operator == '3√x':
-            result = self.n1 ** (1 / 3)
-        elif self.math_operator == '√x':
-            result = math.sqrt(self.n1)
-        elif self.math_operator == '1 / x':
-            result = 1 / self.n1
-        
-        # Equal double click
-        elif self.math_operator == None:
-            self.ui.lbl_temp.setText(f'{self.ui.el_entry.text()} = ')
-            self.ui.el_entry.setText(str(self.ui.el_entry.text()))
-            return
-        
-        if self.math_operator in self.ONLY_n1_OPERATOS:
-            self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} = ')
-            self.ui.el_entry.setText(str(result))
-
-        else:
-            self.ui.lbl_temp.setText(f'{self.n1} {self.math_operator} {self.n2} = ')
-            self.ui.el_entry.setText(str(result))
-
-        self.math_operator = None
+        except ValueError:
+            QMessageBox.warning(self, 'Lopolen calc. Warning. ValueError', 'You entered unvalid values!')
+            self.clear_entry()
+            self.clear_entry()
+        except ZeroDivisionError:
+            QMessageBox.warning(self, 'Lopolen Calc. Warning. ZeroDivisionError', 'You can\'t divise by zero!')
+            self.clear_entry()
+            self.clear_entry()
 
     def handle_calculation_buttons(self, math_operator):
         if self.n1 is None:
